@@ -1,8 +1,7 @@
 ##<i>MRY</i> Project
 Music Recommendation with <i>Youtube</i>.
 
-###Overview
-###목차 
+###Overview 목차 
 
 1. Project Description 프로젝트 설명
 2. System architecture 시스템 구조
