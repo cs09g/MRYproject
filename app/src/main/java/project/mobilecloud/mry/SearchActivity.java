@@ -32,6 +32,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.HttpConnectionParamBean;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -96,6 +97,7 @@ public class SearchActivity extends MainActivity {
             result_adapter.add(search_query.getText().toString());
         }
         */
+        result_adapter.clear();
         switch(view.getId()){
             case R.id.search_button:
                 if(!validate()) {
@@ -103,9 +105,9 @@ public class SearchActivity extends MainActivity {
                 }
                 else {
                     /*
-                    SERVER URL is not working yet.
                     It's going to be in AWS with python
                      */
+
                     new HttpAsyncTask().onPostExecute("http://52.68.192.12/soundnerd/music/search"); // json data stored at.
                 }
             break;
@@ -117,15 +119,29 @@ public class SearchActivity extends MainActivity {
         @Override
         protected String doInBackground(String... urls){
             videoRequest = new VideoRequest();
-           // videoRequest.setTitle(search_query.getText().toString());
+            videoRequest.setTitle(search_query.getText().toString());
             videoRequest.setStart(1);
             videoRequest.setCount(5);
-
             return POST(urls[0], videoRequest);
         }
         @Override
         protected void onPostExecute(String result){
-            result_adapter.add(doInBackground(result));
+            String jsonRes = doInBackground(result);
+
+            try {
+                JSONObject jsonObj = new JSONObject(jsonRes);
+                JSONArray jsonData = jsonObj.getJSONArray("tracks");
+                for (int i = 0; i < jsonData.length(); i++) {
+                    JSONObject eachData = jsonData.getJSONObject(i);
+                    String trackId = eachData.getString("track_id");
+                    String title = eachData.getString("title");
+                    String youtube_url = eachData.getString("url");
+                    result_adapter.add("trackID : "+trackId + "\nTitle : " + title + "\nURL : " + youtube_url);
+                }
+            }
+            catch(Exception e){
+                Log.d("InputStream", e.getLocalizedMessage());
+            }
         }
     }
     private boolean validate() {
@@ -142,8 +158,9 @@ public class SearchActivity extends MainActivity {
             HttpClient httpclient = new DefaultHttpClient();
 
             JSONObject jsonObject = new JSONObject();
-            jsonObject.accumulate("artist", "김광석");
-            jsonObject.accumulate("title", "사랑했지만");
+            //jsonObject.accumulate("artist", "김광석");
+            //jsonObject.accumulate("title", "사랑");
+            jsonObject.accumulate("title", videoRequest.getTitle());
             jsonObject.accumulate("start", videoRequest.getStart());
             jsonObject.accumulate("count", videoRequest.getCount());
 
@@ -167,8 +184,9 @@ public class SearchActivity extends MainActivity {
             if(httpResponse != null) {
                 inputStream = httpResponse.getEntity().getContent();
 
-                if (inputStream != null)
+                if (inputStream != null) {
                     result = convertInputStreamToString(inputStream);
+                }
                 else
                     result = "Didn't work!";
             }
