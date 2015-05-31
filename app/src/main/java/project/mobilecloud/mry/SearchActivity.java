@@ -21,17 +21,24 @@ import com.google.android.youtube.player.YouTubeBaseActivity;
 import com.google.android.youtube.player.YouTubeThumbnailView;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.HttpConnectionParamBean;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 
 /**
  * Created by seulgi choi on 5/5/15.
@@ -69,7 +76,7 @@ public class SearchActivity extends MainActivity {
         /*
         project name : MRY
         public IP : 52.68.192.12
-        search URL : /music/search
+        search URL : soundnerd/music/search
          */
     }
 
@@ -91,13 +98,16 @@ public class SearchActivity extends MainActivity {
         */
         switch(view.getId()){
             case R.id.search_button:
-                if(!validate())
+                if(!validate()) {
                     Toast.makeText(getBaseContext(), "Enter some data!", Toast.LENGTH_LONG).show();
-                /*
-                SERVER URL is not working yet.
-                It's going to be in AWS with python
-                 */
-                new HttpAsyncTask().onPostExecute("http://52.68.192.12/music/search"); // json data stored at.
+                }
+                else {
+                    /*
+                    SERVER URL is not working yet.
+                    It's going to be in AWS with python
+                     */
+                    new HttpAsyncTask().onPostExecute("http://52.68.192.12/soundnerd/music/search"); // json data stored at.
+                }
             break;
         }
 
@@ -107,7 +117,7 @@ public class SearchActivity extends MainActivity {
         @Override
         protected String doInBackground(String... urls){
             videoRequest = new VideoRequest();
-            videoRequest.setTitle(search_query.getText().toString());
+           // videoRequest.setTitle(search_query.getText().toString());
             videoRequest.setStart(1);
             videoRequest.setCount(5);
 
@@ -126,36 +136,42 @@ public class SearchActivity extends MainActivity {
     }
 
     public static String POST(String url, VideoRequest videoRequest){
-        InputStream inputStream = null;
+        InputStream inputStream;
         String result = "";
         try {
-            DefaultHttpClient httpclient = new DefaultHttpClient();
-            HttpPost httppost = new HttpPost(url);
-
-            String json = "";
+            HttpClient httpclient = new DefaultHttpClient();
 
             JSONObject jsonObject = new JSONObject();
-            jsonObject.accumulate("artist", "");
-            jsonObject.accumulate("title", videoRequest.getTitle());
+            jsonObject.accumulate("artist", "김광석");
+            jsonObject.accumulate("title", "사랑했지만");
             jsonObject.accumulate("start", videoRequest.getStart());
             jsonObject.accumulate("count", videoRequest.getCount());
 
-            json = jsonObject.toString();
+            String json = jsonObject.toString();
 
-            StringEntity se = new StringEntity(json);
+            HttpPost httpPost = new HttpPost(url);
 
-            httppost.setEntity(se);
+            ArrayList<NameValuePair> post = new ArrayList<NameValuePair>();
 
-            httppost.setHeader("Accept", "application/json");
-            httppost.setHeader("Content-type", "application/json");
+            HttpParams params = httpclient.getParams();
+            HttpConnectionParams.setConnectionTimeout(params, 5000);
+            HttpConnectionParams.setSoTimeout(params, 5000);
 
-            HttpResponse httpResponse = httpclient.execute(httppost);
-            inputStream = httpResponse.getEntity().getContent();
+            post.add(new BasicNameValuePair("data", json));
 
-            if (inputStream != null)
-                result = convertInputStreamToString(inputStream);
-            else
-                result = "Didn't work!";
+            UrlEncodedFormEntity entity = new UrlEncodedFormEntity(post, "UTF-8");
+            httpPost.setEntity(entity);
+
+            HttpResponse httpResponse = httpclient.execute(httpPost);
+
+            if(httpResponse != null) {
+                inputStream = httpResponse.getEntity().getContent();
+
+                if (inputStream != null)
+                    result = convertInputStreamToString(inputStream);
+                else
+                    result = "Didn't work!";
+            }
         }
         catch(Exception e){
             Log.d("InputStream", e.getLocalizedMessage());
@@ -165,7 +181,7 @@ public class SearchActivity extends MainActivity {
 
     private static String convertInputStreamToString(InputStream inputStream) throws IOException {
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-        String line = "";
+        String line;
         String result = "";
         while((line = bufferedReader.readLine()) != null){
             result += line;
