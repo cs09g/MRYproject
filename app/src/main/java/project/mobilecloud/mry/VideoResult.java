@@ -6,29 +6,29 @@ package project.mobilecloud.mry;
 public class VideoResult {
     private String track_id, artist, title, url;
 
-    private void setTrackID(String trackID){
-        track_id = trackID;
+    public void setTrackID(String trackID){
+        this.track_id = trackID;
     }
-    private void setArtist(String Artist){
-        artist = Artist;
+    public void setArtist(String Artist){
+        this.artist = Artist;
     }
-    private void setTitle(String Title){
-        title = Title;
+    public void setTitle(String Title){
+        this.title = Title;
     }
-    private void setURL(String URL){
-        url = URL;
+    public void setURL(String URL){
+        this.url = URL;
     }
 
-    private String getTrackID(){
+    public String getTrackID(){
         return track_id;
     }
-    private String getArtist(){
+    public String getArtist(){
         return artist;
     }
-    private String getTitle() {
+    public String getTitle() {
         return title;
     }
-    private String getURL(){
+    public String getURL(){
         return url;
     }
 }

@@ -16,7 +16,9 @@
             android:layout_weight="1"
             android:background="@color/white"
             android:layout_margin="4dp"
-            android:id="@+id/video_search_query" />
+            android:id="@+id/video_search_query"
+            android:imeOptions="actionSearch"
+            android:inputType="text"/>
 
         <Button
             android:layout_width="wrap_content"
@@ -30,12 +32,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_weight="1">
+        android:layout_weight="1" >
 
         <ListView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/video_list" />
+            android:id="@+id/video_list"
+            android:background="@color/white"/>
 
     </LinearLayout>
 

@@ -8,12 +8,12 @@ public class VideoRequest {
     private int start, count; // starting index of list, number of recommendations
 
     public void setArtist(String Artist){
-        artist = Artist;
+        this.artist = Artist;
     }
-    public void setTitle(String Title) { title = Title; }
-    public void setStart(int Start) { start = Start; }
+    public void setTitle(String Title) { this.title = Title; }
+    public void setStart(int Start) { this.start = Start; }
     public void setCount(int Cnt){
-        count = Cnt;
+        this.count = Cnt;
     }
 
     public String getArtist(){

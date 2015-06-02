@@ -2,19 +2,30 @@ package project.mobilecloud.mry;
 
 import android.app.Activity;
 import android.app.SearchManager;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v7.widget.SearchView;
 import android.util.Log;
-import android.view.Menu;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.youtube.player.YouTubeBaseActivity;
@@ -23,13 +34,11 @@ import com.google.android.youtube.player.YouTubeThumbnailView;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
+
 import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.params.HttpConnectionParamBean;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.json.JSONArray;
@@ -39,19 +48,23 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 
 /**
  * Created by seulgi choi on 5/5/15.
  */
 
-public class SearchActivity extends MainActivity {
+public class SearchActivity extends MainActivity{
 
     EditText search_query;
-    ListView result_query;
     Button search_button;
-    ArrayAdapter<String> result_adapter;
     VideoRequest videoRequest;
+    ListView mListView = null;
+    ListViewAdapter mAdapter = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState){
@@ -64,15 +77,36 @@ public class SearchActivity extends MainActivity {
         /*
         @@ Make array for video list
          */
-        result_query = (ListView) findViewById(R.id.video_list);
-        result_adapter = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_1);
-        result_query.setAdapter(result_adapter);
+        mListView = (ListView) findViewById(R.id.video_list);
+        mAdapter = new ListViewAdapter(this);
+        mListView.setAdapter(mAdapter);
 
         /*
         @@ Search button
          */
         search_button = (Button) findViewById(R.id.search_button);
         search_button.setOnClickListener(this);
+
+        search_query.setOnEditorActionListener(new TextView.OnEditorActionListener(){
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event){
+                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                    search_button.performClick();
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        /*
+        @@ Onclick event on list view item
+         */
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+            @Override
+            public void onItemClick(AdapterView<?> parent, View v, int position, long id){
+                VideoItem mData = mAdapter.mListData.get(position);
+                Toast.makeText(SearchActivity.this, mData.getSongTitle(), Toast.LENGTH_SHORT).show();
+            }
+        });
 
         /*
         project name : MRY
@@ -81,41 +115,103 @@ public class SearchActivity extends MainActivity {
          */
     }
 
-    public boolean isConnected(){
-        ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Activity.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-        if(networkInfo != null && networkInfo.isConnected())
-            return true;
-        else
-            return false;
+    private class ViewHolder{
+        public ImageView thumbnail;
+        public TextView title;
+        public TextView artist;
+    }
+
+    private class ListViewAdapter extends BaseAdapter{
+        private Context mContext = null;
+        private ArrayList<VideoItem> mListData = new ArrayList<VideoItem>();
+
+        public ListViewAdapter(Context mContext){
+            super();
+            this.mContext = mContext;
+        }
+
+        @Override
+        public int getCount(){
+            return mListData.size();
+        }
+
+        @Override
+        public Object getItem(int position){
+            return mListData.get(position);
+        }
+
+        @Override
+        public long getItemId(int position){
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent){
+            ViewHolder holder;
+            if(convertView == null){
+                holder = new ViewHolder();
+
+                LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                convertView = inflater.inflate(R.layout.list_item, null);
+
+                holder.thumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
+                holder.title = (TextView) convertView.findViewById(R.id.song_title);
+                holder.artist = (TextView) convertView.findViewById(R.id.song_artist);
+
+                convertView.setTag(holder);
+            }
+            else{
+                holder = (ViewHolder) convertView.getTag();
+            }
+
+            VideoItem mData = mListData.get(position);
+
+            if(mData.getThumbnail() != null){
+                holder.thumbnail.setVisibility(View.VISIBLE);
+                holder.thumbnail.setImageDrawable(mData.getThumbnail());
+            }
+            else{
+                holder.thumbnail.setVisibility(View.GONE);
+            }
+
+            holder.title.setText(mData.getSongTitle());
+            holder.artist.setText(mData.getSongArtist());
+
+            return convertView;
+        }
+
+        public void addItem(Drawable thumbnail, String title, String artist){
+            VideoItem addInfo = new VideoItem(thumbnail, title, artist);
+
+            mListData.add(addInfo);
+        }
+        public void dataChange(){
+            mAdapter.notifyDataSetChanged();
+        }
     }
 
     @Override
     public void onClick(View view){
-        /*
-        if(search_query != null){
-            result_adapter.add(search_query.getText().toString());
-        }
-        */
-        result_adapter.clear();
         switch(view.getId()){
             case R.id.search_button:
-                if(!validate()) {
+                if(!validate()){
                     Toast.makeText(getBaseContext(), "Enter some data!", Toast.LENGTH_LONG).show();
                 }
-                else {
+                else{
                     /*
                     It's going to be in AWS with python
                      */
+                    String serverURL = "http://52.68.192.12";
+                    String function = "/soundnerd/music/search";
 
-                    new HttpAsyncTask().onPostExecute("http://52.68.192.12/soundnerd/music/search"); // json data stored at.
+                    new HttpAsyncTask().onPostExecute(serverURL+function); // json data stored at.
                 }
             break;
         }
 
     }
 
-    private class HttpAsyncTask extends AsyncTask<String, Void, String> {
+    private class HttpAsyncTask extends AsyncTask<String, Void, String>{
         @Override
         protected String doInBackground(String... urls){
             videoRequest = new VideoRequest();
@@ -128,15 +224,22 @@ public class SearchActivity extends MainActivity {
         protected void onPostExecute(String result){
             String jsonRes = doInBackground(result);
 
-            try {
+            try{
                 JSONObject jsonObj = new JSONObject(jsonRes);
                 JSONArray jsonData = jsonObj.getJSONArray("tracks");
-                for (int i = 0; i < jsonData.length(); i++) {
+
+                for(int i = 0; i < jsonData.length(); i++){
                     JSONObject eachData = jsonData.getJSONObject(i);
-                    String trackId = eachData.getString("track_id");
-                    String title = eachData.getString("title");
-                    String youtube_url = eachData.getString("url");
-                    result_adapter.add("trackID : "+trackId + "\nTitle : " + title + "\nURL : " + youtube_url);
+                    VideoResult videoResult = new VideoResult();
+
+                    videoResult.setTrackID(eachData.getString("track_id"));
+                    videoResult.setArtist(eachData.getString("artist"));
+                    videoResult.setTitle(eachData.getString("title"));
+                    videoResult.setURL(eachData.getString("url"));
+
+                    String thumbnailURL = getYoutubeThumbnailUrl(videoResult.getURL());
+                    mAdapter.addItem(drawableFromUrl(thumbnailURL), videoResult.getTitle(), videoResult.getArtist());
+                    mAdapter.dataChange();
                 }
             }
             catch(Exception e){
@@ -144,7 +247,88 @@ public class SearchActivity extends MainActivity {
             }
         }
     }
-    private boolean validate() {
+
+    /*
+    @@ Make drawable object from URL
+
+    http://stackoverflow.com/questions/3375166/android-drawable-images-from-url
+     */
+    public static Drawable drawableFromUrl(String url) throws IOException{
+        Bitmap x;
+
+        HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+        connection.connect();
+        InputStream input = connection.getInputStream();
+
+        x = BitmapFactory.decodeStream(input);
+        return new BitmapDrawable(x);
+    }
+
+    /*
+    @@ Get youtube video's thumbnail from URL
+
+    https://androidsnippets.wordpress.com/2012/08/16/how-to-get-thumbnail-image-icon-for-a-youtube-video/
+     */
+    public static String getYoutubeThumbnailUrl(String youtubeUrl){
+        String thumbImageUrl = "http://img.youtube.com/vi/noimagefound/default.jpg";
+
+        if(youtubeUrl!=null && youtubeUrl.trim().length()>0 && youtubeUrl.startsWith("http") && youtubeUrl.contains("youtube")){
+            LinkedHashMap<String, String> params = new LinkedHashMap<String, String>();
+            try{
+                youtubeUrl = URLDecoder.decode(youtubeUrl, "UTF-8");
+
+                if(youtubeUrl.indexOf('?')>0){
+                    String array[] = youtubeUrl.split("\\?");
+
+                    int equalsFilterIndex = array.length - 1;
+                    String equalsString = array[equalsFilterIndex];
+
+                    if(equalsString.indexOf('&')>0){
+                        String ampersandArray[] = equalsString.split("&");
+                        for(String parameter : ampersandArray){
+                            String keyvaluePair[] = parameter.split("=");
+                            params.put(URLDecoder.decode(keyvaluePair[0],"UTF-8"),URLDecoder.decode(keyvaluePair[1],"UTF-8"));
+                        }
+                    }
+                    else{
+                        String v[] = equalsString.split("=");
+                        params.put(URLDecoder.decode(v[0],"UTF-8"),URLDecoder.decode(v[1],"UTF-8"));
+                    }
+                }
+
+                int size = params.size();
+
+                if(size==0 || !params.containsKey("v")){
+                    if(size>0)
+                        youtubeUrl = youtubeUrl.substring(0, youtubeUrl.indexOf("?",0));
+
+                    String vtoSplit = "/v/";
+                    int index = youtubeUrl.indexOf(vtoSplit,0);
+
+                    int fromIndex = index + vtoSplit.length();
+                    int lastIndex = youtubeUrl.indexOf("?", 0);
+
+                    if(lastIndex==-1)
+                        lastIndex = youtubeUrl.length();
+
+                    String v = youtubeUrl.substring(fromIndex,lastIndex);
+                    thumbImageUrl = "http://img.youtube.com/vi/" + v + "/default.jpg";
+                }
+                else{
+                    String v = params.get("v");
+                    thumbImageUrl = "http://img.youtube.com/vi/" + v + "/default.jpg";
+                }
+            }
+            catch(Exception e){
+                if(e!=null)
+                    e.printStackTrace();
+            }
+        }
+
+        return thumbImageUrl;
+    }
+
+    private boolean validate(){
         if(search_query.getText().toString().trim().equals(""))
             return false;
         else
@@ -154,12 +338,10 @@ public class SearchActivity extends MainActivity {
     public static String POST(String url, VideoRequest videoRequest){
         InputStream inputStream;
         String result = "";
-        try {
+        try{
             HttpClient httpclient = new DefaultHttpClient();
 
             JSONObject jsonObject = new JSONObject();
-            //jsonObject.accumulate("artist", "김광석");
-            //jsonObject.accumulate("title", "사랑");
             jsonObject.accumulate("title", videoRequest.getTitle());
             jsonObject.accumulate("start", videoRequest.getStart());
             jsonObject.accumulate("count", videoRequest.getCount());
@@ -181,10 +363,10 @@ public class SearchActivity extends MainActivity {
 
             HttpResponse httpResponse = httpclient.execute(httpPost);
 
-            if(httpResponse != null) {
+            if(httpResponse != null){
                 inputStream = httpResponse.getEntity().getContent();
 
-                if (inputStream != null) {
+                if(inputStream != null){
                     result = convertInputStreamToString(inputStream);
                 }
                 else
