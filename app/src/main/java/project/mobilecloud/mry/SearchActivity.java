@@ -58,6 +58,12 @@ import java.util.LinkedHashMap;
  * Created by seulgi choi on 5/5/15.
  */
 
+/*
+    project name : MRY
+    public IP : 52.68.192.12
+    search URL : soundnerd/music/search
+    recommend URL : soundnerd/music/recommend
+ */
 public class SearchActivity extends MainActivity{
 
     EditText search_query;
@@ -107,12 +113,6 @@ public class SearchActivity extends MainActivity{
                 Toast.makeText(SearchActivity.this, mData.getSongTitle(), Toast.LENGTH_SHORT).show();
             }
         });
-
-        /*
-        project name : MRY
-        public IP : 52.68.192.12
-        search URL : soundnerd/music/search
-         */
     }
 
     private class ViewHolder{
@@ -185,13 +185,30 @@ public class SearchActivity extends MainActivity{
 
             mListData.add(addInfo);
         }
+
+        public void remove(int position){
+            mListData.remove(position);
+            dataChange();
+        }
+
         public void dataChange(){
             mAdapter.notifyDataSetChanged();
+        }
+
+        public void removeAll(){
+            int numOfItems = getCount();
+            for(int i=0;i<numOfItems;i++){
+                remove(0);
+            }
         }
     }
 
     @Override
     public void onClick(View view){
+        // initialize the list
+        mAdapter.removeAll();
+
+        // show searching result
         switch(view.getId()){
             case R.id.search_button:
                 if(!validate()){
