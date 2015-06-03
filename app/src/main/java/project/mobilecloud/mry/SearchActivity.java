@@ -65,7 +65,6 @@ import java.util.LinkedHashMap;
     recommend URL : soundnerd/music/recommend
  */
 public class SearchActivity extends MainActivity{
-
     EditText search_query;
     Button search_button;
     VideoRequest videoRequest;
@@ -259,8 +258,11 @@ public class SearchActivity extends MainActivity{
                     videoResult.setTitle(eachData.getString("title"));
                     videoResult.setURL(eachData.getString("url"));
 
-                    String thumbnailURL = getYoutubeThumbnailUrl(videoResult.getURL());
-                    mAdapter.addItem(drawableFromUrl(thumbnailURL), videoResult.getURL(), videoResult.getTitle(), videoResult.getArtist());
+                    ThumbnailHandler thumbnail = new ThumbnailHandler();
+
+                    String thumbnailURL = thumbnail.getYoutubeThumbnailUrl(videoResult.getURL());
+                    mAdapter.addItem(thumbnail.drawableFromUrl(thumbnailURL), videoResult.getURL(),
+                                     videoResult.getTitle(), videoResult.getArtist());
                     mAdapter.dataChange();
                 }
             }
@@ -268,86 +270,6 @@ public class SearchActivity extends MainActivity{
                 Log.d("InputStream", e.getLocalizedMessage());
             }
         }
-    }
-
-    /*
-    @@ Make drawable object from URL
-
-    http://stackoverflow.com/questions/3375166/android-drawable-images-from-url
-     */
-    public static Drawable drawableFromUrl(String url) throws IOException{
-        Bitmap x;
-
-        HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
-        connection.connect();
-        InputStream input = connection.getInputStream();
-
-        x = BitmapFactory.decodeStream(input);
-        return new BitmapDrawable(x);
-    }
-
-    /*
-    @@ Get youtube video's thumbnail from URL
-
-    https://androidsnippets.wordpress.com/2012/08/16/how-to-get-thumbnail-image-icon-for-a-youtube-video/
-     */
-    public static String getYoutubeThumbnailUrl(String youtubeUrl){
-        String thumbImageUrl = "http://img.youtube.com/vi/noimagefound/default.jpg";
-
-        if(youtubeUrl!=null && youtubeUrl.trim().length()>0 && youtubeUrl.startsWith("http") && youtubeUrl.contains("youtube")){
-            LinkedHashMap<String, String> params = new LinkedHashMap<String, String>();
-            try{
-                youtubeUrl = URLDecoder.decode(youtubeUrl, "UTF-8");
-
-                if(youtubeUrl.indexOf('?')>0){
-                    String array[] = youtubeUrl.split("\\?");
-
-                    int equalsFilterIndex = array.length - 1;
-                    String equalsString = array[equalsFilterIndex];
-
-                    if(equalsString.indexOf('&')>0){
-                        String ampersandArray[] = equalsString.split("&");
-                        for(String parameter : ampersandArray){
-                            String keyvaluePair[] = parameter.split("=");
-                            params.put(URLDecoder.decode(keyvaluePair[0],"UTF-8"),URLDecoder.decode(keyvaluePair[1],"UTF-8"));
-                        }
-                    }
-                    else{
-                        String v[] = equalsString.split("=");
-                        params.put(URLDecoder.decode(v[0],"UTF-8"),URLDecoder.decode(v[1],"UTF-8"));
-                    }
-                }
-
-                int size = params.size();
-
-                if(size==0 || !params.containsKey("v")){
-                    if(size>0)
-                        youtubeUrl = youtubeUrl.substring(0, youtubeUrl.indexOf("?",0));
-
-                    String vtoSplit = "/v/";
-                    int index = youtubeUrl.indexOf(vtoSplit,0);
-
-                    int fromIndex = index + vtoSplit.length();
-                    int lastIndex = youtubeUrl.indexOf("?", 0);
-
-                    if(lastIndex==-1)
-                        lastIndex = youtubeUrl.length();
-
-                    String v = youtubeUrl.substring(fromIndex,lastIndex);
-                    thumbImageUrl = "http://img.youtube.com/vi/" + v + "/default.jpg";
-                }
-                else{
-                    String v = params.get("v");
-                    thumbImageUrl = "http://img.youtube.com/vi/" + v + "/default.jpg";
-                }
-            }
-            catch(Exception e){
-                if(e!=null)
-                    e.printStackTrace();
-            }
-        }
-
-        return thumbImageUrl;
     }
 
     private boolean validate(){
