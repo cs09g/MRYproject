@@ -1,5 +1,6 @@
 package project.mobilecloud.mry;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -13,17 +14,25 @@ import com.google.android.youtube.player.YouTubePlayer.Provider;
 import com.google.android.youtube.player.YouTubePlayerView;
 
 /**
- * Created by algolab on 5/5/15.
+ * Created by seulgi choi on 6/3/15.
  */
 public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.OnInitializedListener {
     public static final String API_KEY = "AIzaSyBrWf4JCHSUoxs6YTPpyiEO7ZMz6TEXaf8";
 
-    //http://youtu.be/<VIDEO_ID>
-    public static final String VIDEO_ID = "7hokQ-M-l4I";
+    String VIDEO_ID;//"7hokQ-M-l4I";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Intent intent = getIntent();
+        // current -- http://www.youtu.be/<VIDEO_ID>
+        // past -- https://www.youtube.com/watch?v=<VIDEO_ID>
+        String wholeURL = intent.getStringExtra("URL");
+        VIDEO_ID = wholeURL.substring(32);
+        System.out.println(intent.getStringExtra("URL"));
+        System.out.println(VIDEO_ID);
+
         /** attaching layout xml **/
         setContentView(R.layout.play_video);
 
@@ -47,7 +56,8 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
 
         /** Start buffering **/
         if (!wasRestored) {
-            player.cueVideo(VIDEO_ID);
+            //player.cueVideo(VIDEO_ID);
+            player.loadVideo(VIDEO_ID);
         }
     }
 

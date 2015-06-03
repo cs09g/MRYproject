@@ -5,11 +5,31 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.google.android.youtube.player.YouTubePlayerView
-        android:id="@+id/youtube_player"
+    <LinearLayout
         android:layout_width="fill_parent"
-        android:layout_height="150dp"
-        android:layout_margin="10dp" />
+        android:layout_height="fill_parent"
+        android:orientation="horizontal" >
 
+        <com.google.android.youtube.player.YouTubePlayerView
+            android:id="@+id/youtube_player"
+            android:layout_width="fill_parent"
+            android:layout_height="150dp"
+            android:layout_margin="10dp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_weight="1" >
+
+        <ListView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/video_list"
+            android:background="@color/white"/>
+
+    </LinearLayout>
 
 </LinearLayout>

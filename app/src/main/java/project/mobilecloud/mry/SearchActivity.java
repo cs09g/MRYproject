@@ -110,7 +110,12 @@ public class SearchActivity extends MainActivity{
             @Override
             public void onItemClick(AdapterView<?> parent, View v, int position, long id){
                 VideoItem mData = mAdapter.mListData.get(position);
-                Toast.makeText(SearchActivity.this, mData.getSongTitle(), Toast.LENGTH_SHORT).show();
+
+                Intent intent = new Intent(SearchActivity.this, VideoActivity.class);
+                intent.putExtra("URL", mData.getSongURL());
+                startActivityForResult(intent, 1);
+
+                //Toast.makeText(SearchActivity.this, mData.getSongTitle(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -180,8 +185,8 @@ public class SearchActivity extends MainActivity{
             return convertView;
         }
 
-        public void addItem(Drawable thumbnail, String title, String artist){
-            VideoItem addInfo = new VideoItem(thumbnail, title, artist);
+        public void addItem(Drawable thumbnail, String song_url, String title, String artist){
+            VideoItem addInfo = new VideoItem(thumbnail, song_url, title, artist);
 
             mListData.add(addInfo);
         }
@@ -255,7 +260,7 @@ public class SearchActivity extends MainActivity{
                     videoResult.setURL(eachData.getString("url"));
 
                     String thumbnailURL = getYoutubeThumbnailUrl(videoResult.getURL());
-                    mAdapter.addItem(drawableFromUrl(thumbnailURL), videoResult.getTitle(), videoResult.getArtist());
+                    mAdapter.addItem(drawableFromUrl(thumbnailURL), videoResult.getURL(), videoResult.getTitle(), videoResult.getArtist());
                     mAdapter.dataChange();
                 }
             }
