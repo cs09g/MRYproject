@@ -113,9 +113,9 @@ public class SearchActivity extends MainActivity{
 
                 Intent intent = new Intent(SearchActivity.this, VideoActivity.class);
                 intent.putExtra("URL", mData.getSongURL());
+                intent.putExtra("TITLE", mData.getSongTitle());
+                intent.putExtra("ARTIST", mData.getSongArtist());
                 startActivityForResult(intent, 1);
-
-                //Toast.makeText(SearchActivity.this, mData.getSongTitle(), Toast.LENGTH_SHORT).show();
             }
         });
     }
