@@ -114,6 +114,7 @@ public class SearchActivity extends MainActivity{
                 intent.putExtra("URL", mData.getSongURL());
                 intent.putExtra("TITLE", mData.getSongTitle());
                 intent.putExtra("ARTIST", mData.getSongArtist());
+                intent.putExtra("TRACK_ID", mData.getTrackID());
                 startActivityForResult(intent, 1);
             }
         });
@@ -184,8 +185,8 @@ public class SearchActivity extends MainActivity{
             return convertView;
         }
 
-        public void addItem(Drawable thumbnail, String song_url, String title, String artist){
-            VideoItem addInfo = new VideoItem(thumbnail, song_url, title, artist);
+        public void addItem(Drawable thumbnail, String song_url, String title, String artist, String track_id){
+            VideoItem addInfo = new VideoItem(thumbnail, song_url, title, artist, track_id);
 
             mListData.add(addInfo);
         }
@@ -262,7 +263,9 @@ public class SearchActivity extends MainActivity{
 
                     String thumbnailURL = thumbnail.getYoutubeThumbnailUrl(videoResult.getURL());
                     mAdapter.addItem(thumbnail.drawableFromUrl(thumbnailURL), videoResult.getURL(),
-                                     videoResult.getTitle(), videoResult.getArtist());
+                                     videoResult.getTitle(), videoResult.getArtist(),
+                                     videoResult.getTrackID());
+
                     mAdapter.dataChange();
                 }
             }

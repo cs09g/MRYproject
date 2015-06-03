@@ -29,6 +29,10 @@ public class ListViewAdapter extends BaseAdapter {
         this.mContext = mContext;
     }
 
+    public ArrayList<VideoItem> getListData(){
+        return mListData;
+    }
+
     @Override
     public int getCount(){
         return mListData.size();
@@ -79,8 +83,8 @@ public class ListViewAdapter extends BaseAdapter {
         return convertView;
     }
 
-    public void addItem(Drawable thumbnail, String song_url, String title, String artist){
-        VideoItem addInfo = new VideoItem(thumbnail, song_url, title, artist);
+    public void addItem(Drawable thumbnail, String song_url, String title, String artist, String track_id){
+        VideoItem addInfo = new VideoItem(thumbnail, song_url, title, artist, track_id);
 
         mListData.add(addInfo);
     }
