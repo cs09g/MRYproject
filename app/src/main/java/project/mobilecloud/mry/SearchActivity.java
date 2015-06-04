@@ -71,6 +71,8 @@ public class SearchActivity extends MainActivity{
     ListView mListView = null;
     ListViewAdapter mAdapter = null;
 
+    public static final String API_KEY = "AIzaSyBrWf4JCHSUoxs6YTPpyiEO7ZMz6TEXaf8";
+
     @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
@@ -223,9 +225,23 @@ public class SearchActivity extends MainActivity{
                     /*
                     It's going to be in AWS with python
                      */
+
+                    /** Request to Bonacell **/
                     String serverURL = "http://52.68.192.12";
                     String function = "/soundnerd/music/search";
 
+                    /*
+                    User can watch videos even that Bonacell doesn't have.
+                    So, query should be sent to Youtube not Bonacell.
+
+                    But there's an issue.
+                    Youtube doesn't store the artists of videos.
+
+
+                     */
+                    //String youtube = "https://www.googleapis.com/youtube/v3/search?";
+                    //youtube += "part=snippet&q=" + search_query.getText().toString() +
+                    //            "&key=" + API_KEY;
                     new HttpAsyncTask().onPostExecute(serverURL+function); // json data stored at.
                 }
             break;
@@ -240,7 +256,9 @@ public class SearchActivity extends MainActivity{
             videoRequest.setTitle(search_query.getText().toString());
             videoRequest.setStart(1);
             videoRequest.setCount(5);
+            /** for Bonacell **/
             return POST(urls[0], videoRequest);
+            /** for Youtube **/
         }
         @Override
         protected void onPostExecute(String result){
