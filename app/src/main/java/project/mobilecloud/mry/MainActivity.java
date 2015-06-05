@@ -84,7 +84,7 @@ public class MainActivity extends ActionBarActivity implements
     @Override
     public void onConnected(Bundle connectionHint){
         mSignInClicked = false;
-        Toast.makeText(this, "Welcome!", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "Welcome!", Toast.LENGTH_SHORT).show();
 
         // moving to video page after toast
         Intent searchActive = new Intent(this, SearchActivity.class);

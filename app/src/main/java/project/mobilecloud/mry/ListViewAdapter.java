@@ -18,7 +18,7 @@ public class ListViewAdapter extends BaseAdapter {
     private class ViewHolder{
         public ImageView thumbnail;
         public TextView title;
-        public TextView artist;
+        //public TextView artist;
     }
 
     private Context mContext = null;
@@ -59,7 +59,7 @@ public class ListViewAdapter extends BaseAdapter {
 
             holder.thumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
             holder.title = (TextView) convertView.findViewById(R.id.song_title);
-            holder.artist = (TextView) convertView.findViewById(R.id.song_artist);
+            //holder.artist = (TextView) convertView.findViewById(R.id.song_artist);
 
             convertView.setTag(holder);
         }
@@ -78,7 +78,7 @@ public class ListViewAdapter extends BaseAdapter {
         }
 
         holder.title.setText(mData.getSongTitle());
-        holder.artist.setText(mData.getSongArtist());
+        //holder.artist.setText(mData.getSongArtist());
 
         return convertView;
     }

@@ -120,7 +120,7 @@ public class SearchActivity extends MainActivity{
                 intent.putExtra("TITLE", mData.getSongTitle());
                 //intent.putExtra("ARTIST", mData.getSongArtist());
                 intent.putExtra("TRACK_ID", mData.getTrackID());
-                startActivityForResult(intent, 1);
+                startActivity(intent);
             }
         });
     }
@@ -241,8 +241,9 @@ public class SearchActivity extends MainActivity{
                     String youtube = "https://www.googleapis.com/youtube/v3/search?key="+API_KEY;
                     youtube += "&q=" + search_query.getText().toString() +
                                "&fields=items(id,snippet(title))" +
-                               "&part=snippet";
-                    System.out.println(youtube);
+                               "&part=snippet" +
+                               "&maxResults=15";
+
                     new HttpAsyncTask().onGetExecute(youtube); // json data stored at.
                 }
             break;
@@ -282,8 +283,8 @@ public class SearchActivity extends MainActivity{
                     videoResult.setURL(eachData.getString("url"));
 
                     ThumbnailHandler thumbnail = new ThumbnailHandler();
-
                     String thumbnailURL = thumbnail.getYoutubeThumbnailUrl(videoResult.getURL());
+
                     mAdapter.addItem(thumbnail.drawableFromUrl(thumbnailURL), videoResult.getURL(),
                                      videoResult.getTitle(), videoResult.getArtist(),
                                      videoResult.getTrackID());
@@ -303,10 +304,10 @@ public class SearchActivity extends MainActivity{
             try{
                 JSONObject jsonObj = new JSONObject(jsonRes);
                 JSONArray jsonData = jsonObj.getJSONArray("items");
-                System.out.println(jsonData.toString());
+
                 for(int i=0;i<jsonData.length();i++){
                     JSONObject eachData = jsonData.getJSONObject(i);
-                    System.out.println(eachData.toString());
+
                     VideoItemFromYoutube videoResult = new VideoItemFromYoutube();
 
                     String videoID, title;

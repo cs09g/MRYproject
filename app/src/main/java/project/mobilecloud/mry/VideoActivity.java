@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,7 +50,7 @@ import project.mobilecloud.mry.ThumbnailHandler;
  * Created by seulgi choi on 6/3/15.
  */
 public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.OnInitializedListener {
-    public static final String API_KEY = "AIzaSyDhJ9UPOZzjWHSY8-I-2L0qacZeoJAnBVk";
+    public static final String API_KEY = "AIzaSyD_QSrX7JHHYZ_4_vnpIQNNrgSWoWktUUA";
 
     String VIDEO_ID;
     ListView mListView = null;
@@ -73,9 +74,9 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
         VIDEO_ID = intent.getStringExtra("URL").substring(32);
 
         TextView title = (TextView) findViewById(R.id.song_title);
-        TextView artist = (TextView) findViewById(R.id.song_artist);
+        //TextView artist = (TextView) findViewById(R.id.song_artist);
         title.setText(intent.getStringExtra("TITLE"));
-        artist.setText(intent.getStringExtra("ARTIST"));
+        //artist.setText(intent.getStringExtra("ARTIST"));
 
         /*
         @@ Make array for video list
@@ -90,11 +91,12 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
         String serverURL = "http://52.68.192.12";
         String function = "/soundnerd/music/recommend";
 
-        new HttpAsyncTask().onPostExecute(serverURL+function); // json data stored at.
+        //new HttpAsyncTask().onPostExecute(serverURL+function); // json data stored at.
 
         /*
         @@ Onclick event on list view item
          */
+
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
             @Override
             public void onItemClick(AdapterView<?> parent, View v, int position, long id){
@@ -103,12 +105,23 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
                 Intent intent = new Intent(VideoActivity.this, VideoActivity.class);
                 intent.putExtra("URL", mData.getSongURL());
                 intent.putExtra("TITLE", mData.getSongTitle());
-                intent.putExtra("ARTIST", mData.getSongArtist());
+                //intent.putExtra("ARTIST", mData.getSongArtist());
                 intent.putExtra("TRACK_ID", mData.getTrackID());
 
                 startActivityForResult(intent, 1);
             }
         });
+
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event){
+        if(keyCode == KeyEvent.KEYCODE_BACK){
+            VideoActivity.this.finish();
+            System.out.println("finishing intent");
+            //return true;
+        }
+        return super.onKeyDown(keyCode, event);
     }
 
     private class HttpAsyncTask extends AsyncTask<String, Void, String> {
@@ -118,7 +131,9 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
 
             recommendRequest = new RecommendRequest();
             recommendRequest.setTrackID(intent.getStringExtra("TRACK_ID"));
-            recommendRequest.setCount(5);
+            /* test for Bonacell's recommend */
+            //recommendRequest.setTrackID("XKuaZWfYcGfmugio");
+            recommendRequest.setCount(10);
 
             return POST(urls[0], recommendRequest);
         }
@@ -129,7 +144,6 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
             try{
                 JSONObject jsonObj = new JSONObject(jsonRes);
                 JSONArray jsonData = jsonObj.getJSONArray("tracks");
-
                 for(int i = 0; i < jsonData.length(); i++){
                     JSONObject eachData = jsonData.getJSONObject(i);
                     RecommendedVideo recommendedVideo = new RecommendedVideo();
@@ -194,7 +208,7 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
         catch(Exception e){
             Log.d("InputStream", e.getLocalizedMessage());
         }
-
+        System.out.println(result);
         return result;
     }
 
@@ -217,7 +231,6 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
 
     @Override
     public void onInitializationSuccess(Provider provider, YouTubePlayer player, boolean wasRestored) {
-
         /** add listeners to YouTubePlayer instance **/
         player.setPlayerStateChangeListener(playerStateChangeListener);
         player.setPlaybackEventListener(playbackEventListener);
