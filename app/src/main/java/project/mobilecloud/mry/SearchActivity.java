@@ -36,6 +36,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
@@ -52,6 +53,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 
 /**
@@ -71,7 +74,7 @@ public class SearchActivity extends MainActivity{
     ListView mListView = null;
     ListViewAdapter mAdapter = null;
 
-    public static final String API_KEY = "AIzaSyBrWf4JCHSUoxs6YTPpyiEO7ZMz6TEXaf8";
+    public static final String API_KEY = "AIzaSyDhJ9UPOZzjWHSY8-I-2L0qacZeoJAnBVk";
 
     @Override
     public void onCreate(Bundle savedInstanceState){
@@ -115,7 +118,7 @@ public class SearchActivity extends MainActivity{
                 Intent intent = new Intent(SearchActivity.this, VideoActivity.class);
                 intent.putExtra("URL", mData.getSongURL());
                 intent.putExtra("TITLE", mData.getSongTitle());
-                intent.putExtra("ARTIST", mData.getSongArtist());
+                //intent.putExtra("ARTIST", mData.getSongArtist());
                 intent.putExtra("TRACK_ID", mData.getTrackID());
                 startActivityForResult(intent, 1);
             }
@@ -125,7 +128,7 @@ public class SearchActivity extends MainActivity{
     private class ViewHolder{
         public ImageView thumbnail;
         public TextView title;
-        public TextView artist;
+        //public TextView artist;
     }
 
     private class ListViewAdapter extends BaseAdapter{
@@ -163,7 +166,7 @@ public class SearchActivity extends MainActivity{
 
                 holder.thumbnail = (ImageView) convertView.findViewById(R.id.thumbnail);
                 holder.title = (TextView) convertView.findViewById(R.id.song_title);
-                holder.artist = (TextView) convertView.findViewById(R.id.song_artist);
+                //holder.artist = (TextView) convertView.findViewById(R.id.song_artist);
 
                 convertView.setTag(holder);
             }
@@ -182,7 +185,7 @@ public class SearchActivity extends MainActivity{
             }
 
             holder.title.setText(mData.getSongTitle());
-            holder.artist.setText(mData.getSongArtist());
+            //holder.artist.setText(mData.getSongArtist());
 
             return convertView;
         }
@@ -227,43 +230,44 @@ public class SearchActivity extends MainActivity{
                      */
 
                     /** Request to Bonacell **/
-                    String serverURL = "http://52.68.192.12";
-                    String function = "/soundnerd/music/search";
+                    //String serverURL = "http://52.68.192.12";
+                    //String function = "/soundnerd/music/search";
+                    //new HttpAsyncTask().onPostExecute(serverURL+function); // json data stored at.
 
                     /*
                     User can watch videos even that Bonacell doesn't have.
                     So, query should be sent to Youtube not Bonacell.
-
-                    But there's an issue.
-                    Youtube doesn't store the artists of videos.
-
-
                      */
-                    //String youtube = "https://www.googleapis.com/youtube/v3/search?";
-                    //youtube += "part=snippet&q=" + search_query.getText().toString() +
-                    //            "&key=" + API_KEY;
-                    new HttpAsyncTask().onPostExecute(serverURL+function); // json data stored at.
+                    String youtube = "https://www.googleapis.com/youtube/v3/search?key="+API_KEY;
+                    youtube += "&q=" + search_query.getText().toString() +
+                               "&fields=items(id,snippet(title))" +
+                               "&part=snippet";
+                    System.out.println(youtube);
+                    new HttpAsyncTask().onGetExecute(youtube); // json data stored at.
                 }
             break;
         }
 
     }
 
+
     private class HttpAsyncTask extends AsyncTask<String, Void, String>{
         @Override
         protected String doInBackground(String... urls){
-            videoRequest = new VideoRequest();
-            videoRequest.setTitle(search_query.getText().toString());
-            videoRequest.setStart(1);
-            videoRequest.setCount(5);
             /** for Bonacell **/
-            return POST(urls[0], videoRequest);
+            //videoRequest = new VideoRequest();
+            //videoRequest.setTitle(search_query.getText().toString());
+            //videoRequest.setStart(1);
+            //videoRequest.setCount(5);
+            //return POST2Bonacell(urls[0], videoRequest);
             /** for Youtube **/
+            return GET2Youtube(urls[0]);
+
         }
         @Override
         protected void onPostExecute(String result){
             String jsonRes = doInBackground(result);
-
+            /** for Bonacell **/
             try{
                 JSONObject jsonObj = new JSONObject(jsonRes);
                 JSONArray jsonData = jsonObj.getJSONArray("tracks");
@@ -291,6 +295,47 @@ public class SearchActivity extends MainActivity{
                 Log.d("InputStream", e.getLocalizedMessage());
             }
         }
+
+        public void onGetExecute(String result){
+            String jsonRes = doInBackground(result);
+
+            /** for Youtube **/
+            try{
+                JSONObject jsonObj = new JSONObject(jsonRes);
+                JSONArray jsonData = jsonObj.getJSONArray("items");
+                System.out.println(jsonData.toString());
+                for(int i=0;i<jsonData.length();i++){
+                    JSONObject eachData = jsonData.getJSONObject(i);
+                    System.out.println(eachData.toString());
+                    VideoItemFromYoutube videoResult = new VideoItemFromYoutube();
+
+                    String videoID, title;
+                    try {
+                        videoID = eachData.getJSONObject("id").getString("videoId");
+                        title = eachData.getJSONObject("snippet").getString("title");
+                    }
+                    catch(Exception e){
+                        continue;
+                    }
+                    String url = "https://www.youtube.com/watch?v=" +videoID;
+
+                    videoResult.setTrackID(videoID);
+                    videoResult.setTitle(title);
+                    videoResult.setURL(url);
+
+                    ThumbnailHandler thumbnail = new ThumbnailHandler();
+                    String thumbnailURL = thumbnail.getYoutubeThumbnailUrl(videoResult.getURL());
+
+                    mAdapter.addItem(thumbnail.drawableFromUrl(thumbnailURL), videoResult.getURL(),
+                            videoResult.getTitle(), "", videoResult.getTrackID());
+
+                    mAdapter.dataChange();
+                }
+            }
+            catch(Exception e){
+                Log.d("InputStream", e.getLocalizedMessage());
+            }
+        }
     }
 
     private boolean validate(){
@@ -300,7 +345,34 @@ public class SearchActivity extends MainActivity{
             return true;
     }
 
-    public static String POST(String url, VideoRequest videoRequest){
+    public static String GET2Youtube(String url){
+        InputStream inputStream;
+        String result = "";
+
+        try{
+            HttpClient httpclient = new DefaultHttpClient();
+
+            HttpGet httpGet = new HttpGet(url);
+
+            HttpResponse httpResponse = httpclient.execute(httpGet);
+
+            if(httpResponse != null){
+                inputStream = httpResponse.getEntity().getContent();
+
+                if(inputStream != null){
+                    result = convertInputStreamToString(inputStream);
+                }
+                else
+                    result = "Didn't work!";
+            }
+        }
+        catch(Exception e){
+            Log.d("InputStream", e.getLocalizedMessage());
+        }
+        return result;
+    }
+
+    public static String POST2Bonacell(String url, VideoRequest videoRequest){
         InputStream inputStream;
         String result = "";
         try{

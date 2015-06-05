@@ -49,7 +49,7 @@ import project.mobilecloud.mry.ThumbnailHandler;
  * Created by seulgi choi on 6/3/15.
  */
 public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.OnInitializedListener {
-    public static final String API_KEY = "AIzaSyBrWf4JCHSUoxs6YTPpyiEO7ZMz6TEXaf8";
+    public static final String API_KEY = "AIzaSyDhJ9UPOZzjWHSY8-I-2L0qacZeoJAnBVk";
 
     String VIDEO_ID;
     ListView mListView = null;
