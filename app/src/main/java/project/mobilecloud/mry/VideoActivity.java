@@ -310,7 +310,6 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
         catch(Exception e){
             Log.d("InputStream", e.getLocalizedMessage());
         }
-        System.out.println(result);
         return result;
     }
 

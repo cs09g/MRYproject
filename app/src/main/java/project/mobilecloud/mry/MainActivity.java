@@ -62,6 +62,9 @@ public class MainActivity extends ActionBarActivity implements
     public void onClick(View view){
         if(view.getId() == R.id.sign_in_button && !mGoogleApiClient.isConnecting()){
             mSignInClicked = true;
+            if(mGoogleApiClient.isConnected()) {
+                mGoogleApiClient.disconnect();
+            }
             mGoogleApiClient.connect();
         }
     }

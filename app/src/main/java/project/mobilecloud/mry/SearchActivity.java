@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
@@ -28,6 +29,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.youtube.player.YouTubeBaseActivity;
 import com.google.android.youtube.player.YouTubeThumbnailView;
 
@@ -108,19 +110,48 @@ public class SearchActivity extends MainActivity{
         });
 
         /*
-        @@ Onclick event on list view item
+        @@ click event on list view item
          */
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
             @Override
             public void onItemClick(AdapterView<?> parent, View v, int position, long id){
                 VideoItem mData = mAdapter.mListData.get(position);
-
                 Intent intent = new Intent(SearchActivity.this, VideoActivity.class);
                 intent.putExtra("URL", mData.getSongURL());
                 intent.putExtra("TITLE", mData.getSongTitle());
                 //intent.putExtra("ARTIST", mData.getSongArtist());
                 intent.putExtra("TRACK_ID", mData.getTrackID());
+
                 startActivity(intent);
+            }
+        });
+
+        /*
+        @@ long click event on list view item
+         */
+        mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                TextView tv = (TextView)view.findViewById(R.id.song_title);
+                if(tv != null) {
+                    tv.setSelected(true);
+                }
+                return false;
+            }
+        });
+
+        /*
+        @@ touch release event
+         */
+        mListView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if(event.getAction() == MotionEvent.ACTION_UP){
+                    TextView tv = (TextView) v.findViewById(R.id.song_title);
+                    tv.setSelected(false);
+                    mListView.clearFocus();
+                }
+                return false;
             }
         });
     }
@@ -251,6 +282,14 @@ public class SearchActivity extends MainActivity{
 
     }
 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event){
+        if(keyCode == KeyEvent.KEYCODE_BACK){
+            finish();
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
 
     private class HttpAsyncTask extends AsyncTask<String, Void, String>{
         @Override
