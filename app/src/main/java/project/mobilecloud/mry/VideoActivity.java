@@ -30,6 +30,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
@@ -50,7 +51,7 @@ import project.mobilecloud.mry.ThumbnailHandler;
  * Created by seulgi choi on 6/3/15.
  */
 public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.OnInitializedListener {
-    public static final String API_KEY = "AIzaSyD_QSrX7JHHYZ_4_vnpIQNNrgSWoWktUUA";
+    public static final String API_KEY = "AIzaSyDhJ9UPOZzjWHSY8-I-2L0qacZeoJAnBVk";
 
     String VIDEO_ID;
     ListView mListView = null;
@@ -69,6 +70,7 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
         youTubePlayerView.initialize(API_KEY, this);
 
         Intent intent = getIntent();
+
         // current -- http://www.youtu.be/<VIDEO_ID>
         // past -- https://www.youtube.com/watch?v=<VIDEO_ID>
         VIDEO_ID = intent.getStringExtra("URL").substring(32);
@@ -85,13 +87,20 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
         mAdapter = new ListViewAdapter(this);
         mListView.setAdapter(mAdapter);
 
+        /* Suggestion Logic
+        1. Ask to Bonacell for recommendations
+        2. If exist the list, then End.
+           Else ask to Youtube for suggestions
+         */
+
+        /** Suggestions from Bonacell **/
         /*
         It's going to be in AWS with python
          */
         String serverURL = "http://52.68.192.12";
         String function = "/soundnerd/music/recommend";
 
-        //new HttpAsyncTask().onPostExecute(serverURL+function); // json data stored at.
+        new HttpAsyncTask().onPostExecute(serverURL+function); // json data stored at.
 
         /*
         @@ Onclick event on list view item
@@ -137,6 +146,12 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
 
             return POST(urls[0], recommendRequest);
         }
+
+        String doInBackgroundForGET(String... urls){
+            /** for Youtube **/
+            return GET2Youtube(urls[0]);
+        }
+
         @Override
         protected void onPostExecute(String result){
             String jsonRes = doInBackground(result);
@@ -144,21 +159,81 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
             try{
                 JSONObject jsonObj = new JSONObject(jsonRes);
                 JSONArray jsonData = jsonObj.getJSONArray("tracks");
-                for(int i = 0; i < jsonData.length(); i++){
+                if(jsonData.length()==0){
+                    String youtubeUrlForSuggestions =
+                            "https://www.googleapis.com/youtube/v3/search?"+
+                            "relatedToVideoId="+recommendRequest.getTrackID()+
+                            "&part=snippet"+
+                            "&type=video"+
+                            "&key="+API_KEY+
+                            "&videoDuration=medium&videoDuration=short"+
+                            "&maxResults=10"+
+                            "&fields=items(id(videoId),snippet(title,thumbnails(default)))";
+                    System.out.println("^^");
+                    onGetExecute(youtubeUrlForSuggestions);
+                }
+                else {
+                    for (int i = 0; i < jsonData.length(); i++) {
+                        JSONObject eachData = jsonData.getJSONObject(i);
+                        RecommendedVideo recommendedVideo = new RecommendedVideo();
+
+                        recommendedVideo.setTrackID(eachData.getString("track_id"));
+                        recommendedVideo.setArtist(eachData.getString("artist"));
+                        recommendedVideo.setTitle(eachData.getString("title"));
+                        recommendedVideo.setUrl(eachData.getString("url"));
+
+                        ThumbnailHandler thumbnail = new ThumbnailHandler();
+
+                        String thumbnailURL = thumbnail.getYoutubeThumbnailUrl(recommendedVideo.getUrl());
+                        mAdapter.addItem(thumbnail.drawableFromUrl(thumbnailURL), recommendedVideo.getUrl(),
+                                recommendedVideo.getTitle(), recommendedVideo.getArtist(),
+                                recommendedVideo.getTrackID());
+                        mAdapter.dataChange();
+                    }
+                }
+            }
+            catch(Exception e){
+                Log.d("InputStream", e.getLocalizedMessage());
+            }
+        }
+
+        public void onGetExecute(String result){
+            String jsonRes = doInBackgroundForGET(result);
+
+            /** for Youtube **/
+            try{
+                JSONObject jsonObj = new JSONObject(jsonRes);
+                JSONArray jsonData = jsonObj.getJSONArray("items");
+
+                for(int i=0;i<jsonData.length();i++){
                     JSONObject eachData = jsonData.getJSONObject(i);
-                    RecommendedVideo recommendedVideo = new RecommendedVideo();
 
-                    recommendedVideo.setTrackID(eachData.getString("track_id"));
-                    recommendedVideo.setArtist(eachData.getString("artist"));
-                    recommendedVideo.setTitle(eachData.getString("title"));
-                    recommendedVideo.setUrl(eachData.getString("url"));
+                    VideoItemFromYoutube videoResult = new VideoItemFromYoutube();
 
+                    String videoID, title;
+                    try {
+                        videoID = eachData.getJSONObject("id").getString("videoId");
+                        title = eachData.getJSONObject("snippet").getString("title");
+                    }
+                    catch(Exception e){
+                        continue;
+                    }
+                    String url = "https://www.youtube.com/watch?v=" +videoID;
+
+                    videoResult.setTrackID(videoID);
+                    videoResult.setTitle(title);
+                    videoResult.setURL(url);
+
+                    /*
+                    Youtube api provides videos' thumbnails.
+                    if speed of the service is getting slow, then change to use api's not getting from url.
+                     */
                     ThumbnailHandler thumbnail = new ThumbnailHandler();
+                    String thumbnailURL = thumbnail.getYoutubeThumbnailUrl(videoResult.getURL());
 
-                    String thumbnailURL = thumbnail.getYoutubeThumbnailUrl(recommendedVideo.getUrl());
-                    mAdapter.addItem(thumbnail.drawableFromUrl(thumbnailURL), recommendedVideo.getUrl(),
-                                     recommendedVideo.getTitle(), recommendedVideo.getArtist(),
-                                     recommendedVideo.getTrackID());
+                    mAdapter.addItem(thumbnail.drawableFromUrl(thumbnailURL), videoResult.getURL(),
+                            videoResult.getTitle(), "", videoResult.getTrackID());
+
                     mAdapter.dataChange();
                 }
             }
@@ -166,6 +241,33 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
                 Log.d("InputStream", e.getLocalizedMessage());
             }
         }
+    }
+
+    public static String GET2Youtube(String url){
+        InputStream inputStream;
+        String result = "";
+
+        try{
+            HttpClient httpclient = new DefaultHttpClient();
+
+            HttpGet httpGet = new HttpGet(url);
+
+            HttpResponse httpResponse = httpclient.execute(httpGet);
+
+            if(httpResponse != null){
+                inputStream = httpResponse.getEntity().getContent();
+
+                if(inputStream != null){
+                    result = convertInputStreamToString(inputStream);
+                }
+                else
+                    result = "Didn't work!";
+            }
+        }
+        catch(Exception e){
+            Log.d("InputStream", e.getLocalizedMessage());
+        }
+        return result;
     }
 
     public static String POST(String url, RecommendRequest recommendRequest){

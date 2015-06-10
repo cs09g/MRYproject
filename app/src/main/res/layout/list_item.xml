@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal" >
+    android:orientation="horizontal">
 
     <com.google.android.youtube.player.YouTubeThumbnailView
         android:id="@+id/thumbnail"
@@ -25,6 +25,7 @@
             android:ellipsize="marquee"
             android:marqueeRepeatLimit="marquee_forever"
             android:focusableInTouchMode="true"
+
             android:freezesText="true"
             android:scrollHorizontally="true"
             />
