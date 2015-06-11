@@ -274,7 +274,7 @@ public class SearchActivity extends MainActivity{
                     So, query should be sent to Youtube not Bonacell.
                      */
                     String youtube = "https://www.googleapis.com/youtube/v3/search?key="+API_KEY;
-                    youtube += "&q=" + search_query.getText().toString() +
+                    youtube += "&q=" + search_query.getText().toString().replace(" ", "%20") +
                                "&fields=items(id,snippet(title))" +
                                "&part=snippet" +
                                "&maxResults=15";

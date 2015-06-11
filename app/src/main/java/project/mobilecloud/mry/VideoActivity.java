@@ -140,10 +140,10 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
 
             recommendRequest = new RecommendRequest();
             recommendRequest.setTrackID(intent.getStringExtra("TRACK_ID"));
-            /* test for Bonacell's recommend */
+            /* test for Bonacell's recommendations */
             //recommendRequest.setTrackID("XKuaZWfYcGfmugio");
             recommendRequest.setCount(10);
-
+            //System.out.println(recommendRequest.getTrackID());
             return POST(urls[0], recommendRequest);
         }
 
@@ -154,6 +154,8 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
 
         @Override
         protected void onPostExecute(String result){
+            TextView recommender = (TextView)findViewById(R.id.recommender);
+            recommender.setText("Suggestions from Bonacell");
             String jsonRes = doInBackground(result);
 
             try{
@@ -201,6 +203,8 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
         }
 
         public void onGetExecute(String result){
+            TextView recommender = (TextView)findViewById(R.id.recommender);
+            recommender.setText("Suggestions from Youtube");
             String jsonRes = doInBackgroundForGET(result);
 
             /** for Youtube **/
@@ -338,7 +342,7 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
         /** add listeners to YouTubePlayer instance **/
         player.setPlayerStateChangeListener(playerStateChangeListener);
         player.setPlaybackEventListener(playbackEventListener);
-
+        YouTubePlayer p = player;
         /** Start buffering **/
         if (!wasRestored) {
             player.loadVideo(VIDEO_ID); // auto-play
