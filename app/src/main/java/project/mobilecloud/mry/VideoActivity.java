@@ -159,7 +159,10 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
             try{
                 JSONObject jsonObj = new JSONObject(jsonRes);
                 JSONArray jsonData = jsonObj.getJSONArray("tracks");
+
                 if(jsonData.length()==0){
+                    /* when the result is empty from Bonacell */
+                    /** Ask to Youtube **/
                     String youtubeUrlForSuggestions =
                             "https://www.googleapis.com/youtube/v3/search?"+
                             "relatedToVideoId="+recommendRequest.getTrackID()+
@@ -169,7 +172,7 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
                             "&videoDuration=medium&videoDuration=short"+
                             "&maxResults=10"+
                             "&fields=items(id(videoId),snippet(title,thumbnails(default)))";
-                    System.out.println("^^");
+
                     onGetExecute(youtubeUrlForSuggestions);
                 }
                 else {
@@ -392,4 +395,5 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
         public void onVideoStarted() {
         }
     };
+
 }

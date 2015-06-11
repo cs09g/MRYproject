@@ -19,6 +19,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
@@ -100,12 +101,15 @@ public class SearchActivity extends MainActivity{
         search_button.setOnClickListener(this);
 
         search_query.setOnEditorActionListener(new TextView.OnEditorActionListener(){
+            @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event){
-                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                    search_button.performClick();
-                    return true;
+                switch(actionId) {
+                    case EditorInfo.IME_ACTION_SEARCH:
+                        search_button.performClick();
+                        return true;
+                    default:
+                        return false;
                 }
-                return false;
             }
         });
 
@@ -253,7 +257,7 @@ public class SearchActivity extends MainActivity{
         switch(view.getId()){
             case R.id.search_button:
                 if(!validate()){
-                    Toast.makeText(getBaseContext(), "Enter some data!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getBaseContext(), "Enter some data!", Toast.LENGTH_SHORT).show();
                 }
                 else{
                     /*
@@ -282,6 +286,7 @@ public class SearchActivity extends MainActivity{
 
     }
 
+    /* back button event */
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event){
         if(keyCode == KeyEvent.KEYCODE_BACK){

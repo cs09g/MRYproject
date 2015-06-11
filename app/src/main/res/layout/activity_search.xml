@@ -3,26 +3,28 @@
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:background="@color/gray">
+    android:background="@color/white">
 
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
         android:orientation="horizontal">
 
         <EditText
-            android:layout_width="fill_parent"
-            android:layout_height="match_parent"
+            android:layout_width="match_parent"
+            android:layout_height="fill_parent"
             android:layout_weight="1"
-            android:background="@color/white"
-            android:layout_margin="4dp"
+            android:paddingLeft="4dp"
             android:id="@+id/video_search_query"
             android:imeOptions="actionSearch"
-            android:inputType="text"/>
+            android:inputType="text" />
 
         <Button
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+            android:layout_height="fill_parent"
             android:id="@+id/search_button"
             android:text="@string/search_button" />
 
@@ -32,7 +34,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_weight="1" >
+        android:layout_marginTop="4dp">
 
         <ListView
             android:layout_width="fill_parent"
