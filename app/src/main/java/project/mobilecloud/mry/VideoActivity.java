@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -76,9 +77,13 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
         VIDEO_ID = intent.getStringExtra("URL").substring(32);
 
         TextView title = (TextView) findViewById(R.id.song_title);
-        //TextView artist = (TextView) findViewById(R.id.song_artist);
+        TextView artist = (TextView) findViewById(R.id.song_artist);
         title.setText(intent.getStringExtra("TITLE"));
-        //artist.setText(intent.getStringExtra("ARTIST"));
+        artist.setText(intent.getStringExtra("ARTIST"));
+        System.out.println(artist.getText().toString());
+        if(artist.getText().toString() != ""){
+            artist.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+        }
 
         /*
         @@ Make array for video list
@@ -114,7 +119,7 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
                 Intent intent = new Intent(VideoActivity.this, VideoActivity.class);
                 intent.putExtra("URL", mData.getSongURL());
                 intent.putExtra("TITLE", mData.getSongTitle());
-                //intent.putExtra("ARTIST", mData.getSongArtist());
+                intent.putExtra("ARTIST", mData.getSongArtist());
                 intent.putExtra("TRACK_ID", mData.getTrackID());
 
                 startActivityForResult(intent, 1);
@@ -342,7 +347,7 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
         /** add listeners to YouTubePlayer instance **/
         player.setPlayerStateChangeListener(playerStateChangeListener);
         player.setPlaybackEventListener(playbackEventListener);
-        YouTubePlayer p = player;
+
         /** Start buffering **/
         if (!wasRestored) {
             player.loadVideo(VIDEO_ID); // auto-play

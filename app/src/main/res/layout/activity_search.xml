@@ -39,7 +39,13 @@
         <ListView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/video_list"
+            android:id="@+id/bonacell_video_list"
+            android:background="@color/white"/>
+
+        <ListView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/youtube_video_list"
             android:background="@color/white"/>
 
     </LinearLayout>

@@ -6,7 +6,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -74,7 +76,8 @@ public class SearchActivity extends MainActivity{
     EditText search_query;
     Button search_button;
     VideoRequest videoRequest;
-    ListView mListView = null;
+    ListView mListViewForBonacell = null;
+    ListView mListViewForYoutube = null;
     ListViewAdapter mAdapter = null;
 
     public static final String API_KEY = "AIzaSyDhJ9UPOZzjWHSY8-I-2L0qacZeoJAnBVk";
@@ -90,9 +93,11 @@ public class SearchActivity extends MainActivity{
         /*
         @@ Make array for video list
          */
-        mListView = (ListView) findViewById(R.id.video_list);
+        mListViewForBonacell = (ListView) findViewById(R.id.bonacell_video_list);
+        mListViewForYoutube = (ListView) findViewById(R.id.youtube_video_list);
         mAdapter = new ListViewAdapter(this);
-        mListView.setAdapter(mAdapter);
+        mListViewForBonacell.setAdapter(mAdapter);
+        mListViewForYoutube.setAdapter(mAdapter);
 
         /*
         @@ Search button
@@ -116,24 +121,53 @@ public class SearchActivity extends MainActivity{
         /*
         @@ click event on list view item
          */
-        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+        mListViewForBonacell.setOnItemClickListener(new AdapterView.OnItemClickListener(){
             @Override
             public void onItemClick(AdapterView<?> parent, View v, int position, long id){
                 VideoItem mData = mAdapter.mListData.get(position);
-                Intent intent = new Intent(SearchActivity.this, VideoActivity.class);
-                intent.putExtra("URL", mData.getSongURL());
-                intent.putExtra("TITLE", mData.getSongTitle());
-                //intent.putExtra("ARTIST", mData.getSongArtist());
-                intent.putExtra("TRACK_ID", mData.getTrackID());
 
-                startActivity(intent);
+                if(mData.getTrackID() != "") {
+                    Intent intent = new Intent(SearchActivity.this, VideoActivity.class);
+                    intent.putExtra("URL", mData.getSongURL());
+                    intent.putExtra("TITLE", mData.getSongTitle());
+                    //intent.putExtra("ARTIST", mData.getSongArtist());
+                    intent.putExtra("TRACK_ID", mData.getTrackID());
+
+                    startActivity(intent);
+                }
+            }
+        });
+        mListViewForYoutube.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+            @Override
+            public void onItemClick(AdapterView<?> parent, View v, int position, long id){
+                VideoItem mData = mAdapter.mListData.get(position);
+
+                if(mData.getTrackID()!="") {
+                    Intent intent = new Intent(SearchActivity.this, VideoActivity.class);
+                    intent.putExtra("URL", mData.getSongURL());
+                    intent.putExtra("TITLE", mData.getSongTitle());
+                    //intent.putExtra("ARTIST", mData.getSongArtist());
+                    intent.putExtra("TRACK_ID", mData.getTrackID());
+
+                    startActivity(intent);
+                }
             }
         });
 
         /*
         @@ long click event on list view item
          */
-        mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+        mListViewForBonacell.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                TextView tv = (TextView)view.findViewById(R.id.song_title);
+                if(tv != null) {
+                    tv.setSelected(true);
+                }
+                return false;
+            }
+        });
+        mListViewForYoutube.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 TextView tv = (TextView)view.findViewById(R.id.song_title);
@@ -147,13 +181,24 @@ public class SearchActivity extends MainActivity{
         /*
         @@ touch release event
          */
-        mListView.setOnTouchListener(new View.OnTouchListener() {
+        mListViewForBonacell.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if(event.getAction() == MotionEvent.ACTION_UP){
                     TextView tv = (TextView) v.findViewById(R.id.song_title);
                     tv.setSelected(false);
-                    mListView.clearFocus();
+                    mListViewForBonacell.clearFocus();
+                }
+                return false;
+            }
+        });
+        mListViewForYoutube.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if(event.getAction() == MotionEvent.ACTION_UP){
+                    TextView tv = (TextView) v.findViewById(R.id.song_title);
+                    tv.setSelected(false);
+                    mListViewForYoutube.clearFocus();
                 }
                 return false;
             }
@@ -265,9 +310,9 @@ public class SearchActivity extends MainActivity{
                      */
 
                     /** Request to Bonacell **/
-                    //String serverURL = "http://52.68.192.12";
-                    //String function = "/soundnerd/music/search";
-                    //new HttpAsyncTask().onPostExecute(serverURL+function); // json data stored at.
+                    String serverURL = "http://52.68.192.12";
+                    String function = "/soundnerd/music/search";
+                    new HttpAsyncTask().onPostExecute(serverURL+function); // json data stored at.
 
                     /*
                     User can watch videos even that Bonacell doesn't have.
@@ -300,15 +345,19 @@ public class SearchActivity extends MainActivity{
         @Override
         protected String doInBackground(String... urls){
             /** for Bonacell **/
-            //videoRequest = new VideoRequest();
-            //videoRequest.setTitle(search_query.getText().toString());
-            //videoRequest.setStart(1);
-            //videoRequest.setCount(5);
-            //return POST2Bonacell(urls[0], videoRequest);
+            videoRequest = new VideoRequest();
+            videoRequest.setTitle(search_query.getText().toString());
+            videoRequest.setStart(1);
+            videoRequest.setCount(5);
+            return POST2Bonacell(urls[0], videoRequest);
+        }
+
+        String doInBackgroundForGET(String... urls){
             /** for Youtube **/
             return GET2Youtube(urls[0]);
 
         }
+
         @Override
         protected void onPostExecute(String result){
             String jsonRes = doInBackground(result);
@@ -316,7 +365,10 @@ public class SearchActivity extends MainActivity{
             try{
                 JSONObject jsonObj = new JSONObject(jsonRes);
                 JSONArray jsonData = jsonObj.getJSONArray("tracks");
-
+                if(jsonData.length() != 0){
+                    mAdapter.addItem(null, "", "from Bonacell", "", "");
+                    //mListViewForBonacell.getAdapter().getView(0, null, mListViewForBonacell).setClickable(false);
+                }
                 for(int i = 0; i < jsonData.length(); i++){
                     JSONObject eachData = jsonData.getJSONObject(i);
                     VideoResult videoResult = new VideoResult();
@@ -335,6 +387,7 @@ public class SearchActivity extends MainActivity{
 
                     mAdapter.dataChange();
                 }
+
             }
             catch(Exception e){
                 Log.d("InputStream", e.getLocalizedMessage());
@@ -342,13 +395,16 @@ public class SearchActivity extends MainActivity{
         }
 
         public void onGetExecute(String result){
-            String jsonRes = doInBackground(result);
+            String jsonRes = doInBackgroundForGET(result);
 
             /** for Youtube **/
             try{
                 JSONObject jsonObj = new JSONObject(jsonRes);
                 JSONArray jsonData = jsonObj.getJSONArray("items");
-
+                if(jsonData.length()!=0){
+                    mAdapter.addItem(null, "", "from Youtube", "", "");
+                    //mListViewForBonacell.getAdapter().getView(0, null, mListViewForBonacell).setClickable(false);
+                }
                 for(int i=0;i<jsonData.length();i++){
                     JSONObject eachData = jsonData.getJSONObject(i);
 
