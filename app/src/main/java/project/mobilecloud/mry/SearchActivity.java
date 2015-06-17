@@ -68,7 +68,16 @@ import java.util.LinkedHashMap;
     project name : MRY
     public IP : 52.68.192.12
     search URL : soundnerd/music/search
+    -- in { artist, title, start, count }
+    -- out { tracks [{ track_id, artist, title, url }] }
+
+    search youtube URL : soundnerd/music/ytsearch
+    -- in { video_id(youtube) }
+    -- out { tracks [{  }] }
+
     recommend URL : soundnerd/music/recommend
+    -- in { track_id, count }
+    -- out { tracks [{ track_id, artist, title, url, score }]
  */
 public class SearchActivity extends MainActivity{
     EditText search_query;
@@ -299,12 +308,6 @@ public class SearchActivity extends MainActivity{
     private class HttpAsyncTask extends AsyncTask<String, Void, String>{
         @Override
         protected String doInBackground(String... urls){
-            /** for Bonacell **/
-            //videoRequest = new VideoRequest();
-            //videoRequest.setTitle(search_query.getText().toString());
-            //videoRequest.setStart(1);
-            //videoRequest.setCount(5);
-            //return POST2Bonacell(urls[0], videoRequest);
             /** for Youtube **/
             return GET2Youtube(urls[0]);
 

@@ -57,6 +57,7 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
     ListView mListView = null;
     ListViewAdapter mAdapter = null;
     RecommendRequest recommendRequest;
+    VideoIdRequest videoIdReqeust = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,14 +68,21 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
 
         /** Initializing YouTube player view **/
         YouTubePlayerView youTubePlayerView = (YouTubePlayerView) findViewById(R.id.youtube_player);
-        youTubePlayerView.initialize(API_KEY, this);
+        if(youTubePlayerView != null)
+            youTubePlayerView.initialize(API_KEY, this);
 
         Intent intent = getIntent();
 
         // current -- http://www.youtu.be/<VIDEO_ID>
         // past -- https://www.youtube.com/watch?v=<VIDEO_ID>
-        VIDEO_ID = intent.getStringExtra("URL").substring(32);
+        String videoId = intent.getStringExtra("TRACK_ID");
+        VIDEO_ID = videoId;
+        videoIdReqeust = new VideoIdRequest();
+        videoIdReqeust.setVideo_id(VIDEO_ID);
 
+        if(videoId.length() > 11) {
+            VIDEO_ID = getTrackIdFromVideoId(videoId);
+        }
         TextView title = (TextView) findViewById(R.id.song_title);
         //TextView artist = (TextView) findViewById(R.id.song_artist);
         title.setText(intent.getStringExtra("TITLE"));
@@ -127,24 +135,103 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
     public boolean onKeyDown(int keyCode, KeyEvent event){
         if(keyCode == KeyEvent.KEYCODE_BACK){
             VideoActivity.this.finish();
-            System.out.println("finishing intent");
-            //return true;
         }
         return super.onKeyDown(keyCode, event);
     }
 
+    String getTrackIdFromVideoId(String videoId){
+        InputStream inputStream;
+        String result = "";
+        try{
+            HttpClient httpclient = new DefaultHttpClient();
+
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.accumulate("video_id", videoId);
+
+            String json = jsonObject.toString();
+
+            HttpPost httpPost = new HttpPost("http://52.68.192.12/soundnerd/music/ytsearch");
+
+            ArrayList<NameValuePair> post = new ArrayList<NameValuePair>();
+
+            HttpParams params = httpclient.getParams();
+            HttpConnectionParams.setConnectionTimeout(params, 5000);
+            HttpConnectionParams.setSoTimeout(params, 5000);
+
+            post.add(new BasicNameValuePair("data", json));
+
+            UrlEncodedFormEntity entity = new UrlEncodedFormEntity(post, "UTF-8");
+            httpPost.setEntity(entity);
+
+            HttpResponse httpResponse = httpclient.execute(httpPost);
+
+            if(httpResponse != null){
+                inputStream = httpResponse.getEntity().getContent();
+
+                if(inputStream != null){
+                    JSONObject jsonObj = new JSONObject(convertInputStreamToString(inputStream));
+                    JSONArray jsonData = jsonObj.getJSONArray("tracks");
+                    result = jsonData.getJSONObject(0).getString("track_id");
+                }
+                else
+                    result = "Didn't work!";
+            }
+        }
+        catch(Exception e){
+            Log.d("InputStream", e.getLocalizedMessage());
+        }
+        return result;
+    }
     private class HttpAsyncTask extends AsyncTask<String, Void, String> {
         @Override
         protected String doInBackground(String... urls){
-            Intent intent = getIntent();
-
             recommendRequest = new RecommendRequest();
-            recommendRequest.setTrackID(intent.getStringExtra("TRACK_ID"));
-            /* test for Bonacell's recommendations */
-            //recommendRequest.setTrackID("XKuaZWfYcGfmugio");
-            recommendRequest.setCount(10);
-            //System.out.println(recommendRequest.getTrackID());
+            recommendRequest.setTrackID(videoIdReqeust.getVideo_id());
+            recommendRequest.setCount(5);
+
             return POST(urls[0], recommendRequest);
+        }
+
+        String getTrackInfo(String url, VideoIdRequest videoIdRequest){
+            InputStream inputStream;
+            String result = "";
+            try{
+                HttpClient httpclient = new DefaultHttpClient();
+
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.accumulate("video_id", videoIdRequest.getVideo_id());
+
+                String json = jsonObject.toString();
+
+                HttpPost httpPost = new HttpPost(url);
+
+                ArrayList<NameValuePair> post = new ArrayList<NameValuePair>();
+
+                HttpParams params = httpclient.getParams();
+                HttpConnectionParams.setConnectionTimeout(params, 5000);
+                HttpConnectionParams.setSoTimeout(params, 5000);
+
+                post.add(new BasicNameValuePair("data", json));
+
+                UrlEncodedFormEntity entity = new UrlEncodedFormEntity(post, "UTF-8");
+                httpPost.setEntity(entity);
+
+                HttpResponse httpResponse = httpclient.execute(httpPost);
+
+                if(httpResponse != null){
+                    inputStream = httpResponse.getEntity().getContent();
+
+                    if(inputStream != null){
+                        result = convertInputStreamToString(inputStream);
+                    }
+                    else
+                        result = "Didn't work!";
+                }
+            }
+            catch(Exception e){
+                Log.d("InputStream", e.getLocalizedMessage());
+            }
+            return result;
         }
 
         String doInBackgroundForGET(String... urls){
@@ -156,44 +243,54 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
         protected void onPostExecute(String result){
             TextView recommender = (TextView)findViewById(R.id.recommender);
             recommender.setText("Suggestions from Bonacell");
-            String jsonRes = doInBackground(result);
+            String jsonRes = getTrackInfo("http://52.68.192.12/soundnerd/music/ytsearch", videoIdReqeust);
+            //String jsonRes = doInBackground(result);
 
             try{
                 JSONObject jsonObj = new JSONObject(jsonRes);
                 JSONArray jsonData = jsonObj.getJSONArray("tracks");
-
-                if(jsonData.length()==0){
+                int loopCnt = jsonData.length();
+                if(loopCnt==0){
                     /* when the result is empty from Bonacell */
                     /** Ask to Youtube **/
                     String youtubeUrlForSuggestions =
                             "https://www.googleapis.com/youtube/v3/search?"+
-                            "relatedToVideoId="+recommendRequest.getTrackID()+
+                            "relatedToVideoId="+videoIdReqeust.getVideo_id()+
                             "&part=snippet"+
                             "&type=video"+
                             "&key="+API_KEY+
                             "&videoDuration=medium&videoDuration=short"+
                             "&maxResults=10"+
                             "&fields=items(id(videoId),snippet(title,thumbnails(default)))";
-
                     onGetExecute(youtubeUrlForSuggestions);
                 }
                 else {
-                    for (int i = 0; i < jsonData.length(); i++) {
+                    if(loopCnt > 2) loopCnt = 2;
+                    for (int i = 0; i < loopCnt; i++) {
                         JSONObject eachData = jsonData.getJSONObject(i);
-                        RecommendedVideo recommendedVideo = new RecommendedVideo();
+                        // result of ytsearch
+                        videoIdReqeust.setVideo_id(eachData.getString("track_id"));
+                        String recommendJson = doInBackground(result);
 
-                        recommendedVideo.setTrackID(eachData.getString("track_id"));
-                        recommendedVideo.setArtist(eachData.getString("artist"));
-                        recommendedVideo.setTitle(eachData.getString("title"));
-                        recommendedVideo.setUrl(eachData.getString("url"));
+                        JSONObject recommendJsonObj = new JSONObject(recommendJson);
+                        JSONArray recommendJsonData = recommendJsonObj.getJSONArray("tracks");
+                        for(int j=0;j<recommendJsonData.length();j++) {
+                            JSONObject eachRecommendedData = recommendJsonData.getJSONObject(j);
+                            RecommendedVideo recommendedVideo = new RecommendedVideo();
 
-                        ThumbnailHandler thumbnail = new ThumbnailHandler();
+                            recommendedVideo.setTrackID(eachRecommendedData.getString("track_id"));
+                            recommendedVideo.setArtist(eachRecommendedData.getString("artist"));
+                            recommendedVideo.setTitle(eachRecommendedData.getString("title"));
+                            recommendedVideo.setUrl(eachRecommendedData.getString("url"));
 
-                        String thumbnailURL = thumbnail.getYoutubeThumbnailUrl(recommendedVideo.getUrl());
-                        mAdapter.addItem(thumbnail.drawableFromUrl(thumbnailURL), recommendedVideo.getUrl(),
-                                recommendedVideo.getTitle(), recommendedVideo.getArtist(),
-                                recommendedVideo.getTrackID());
-                        mAdapter.dataChange();
+                            ThumbnailHandler thumbnail = new ThumbnailHandler();
+
+                            String thumbnailURL = thumbnail.getYoutubeThumbnailUrl(recommendedVideo.getUrl());
+                            mAdapter.addItem(thumbnail.drawableFromUrl(thumbnailURL), recommendedVideo.getUrl(),
+                                    recommendedVideo.getTitle(), recommendedVideo.getArtist(),
+                                    recommendedVideo.getTrackID());
+                            mAdapter.dataChange();
+                        }
                     }
                 }
             }
@@ -206,7 +303,6 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
             TextView recommender = (TextView)findViewById(R.id.recommender);
             recommender.setText("Suggestions from Youtube");
             String jsonRes = doInBackgroundForGET(result);
-
             /** for Youtube **/
             try{
                 JSONObject jsonObj = new JSONObject(jsonRes);
