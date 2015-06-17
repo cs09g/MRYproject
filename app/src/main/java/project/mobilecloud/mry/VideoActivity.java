@@ -52,6 +52,11 @@ import project.mobilecloud.mry.ThumbnailHandler;
  */
 public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.OnInitializedListener {
     public static final String API_KEY = "AIzaSyDhJ9UPOZzjWHSY8-I-2L0qacZeoJAnBVk";
+    private String serverURL = "http://52.68.192.12";
+    private String recommend_func = "/soundnerd/music/recommend";
+    private String ytsearch_func = "/soundnerd/music/ytsearch";
+    private String search_func = "/soundnerd/music/search";
+    private String youtubeURL = "https://www.youtube.com/watch?v=";
 
     String VIDEO_ID;
     ListView mListView = null;
@@ -83,9 +88,9 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
             VIDEO_ID = getTrackIdFromVideoId(videoId);
         }
         TextView title = (TextView) findViewById(R.id.song_title);
-        //TextView artist = (TextView) findViewById(R.id.song_artist);
+        TextView artist = (TextView) findViewById(R.id.song_artist);
         title.setText(intent.getStringExtra("TITLE"));
-        //artist.setText(intent.getStringExtra("ARTIST"));
+        artist.setText(intent.getStringExtra("ARTIST"));
 
         /*
         @@ Make array for video list
@@ -104,15 +109,12 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
         /*
         It's going to be in AWS with python
          */
-        String serverURL = "http://52.68.192.12";
-        String function = "/soundnerd/music/recommend";
 
-        new HttpAsyncTask().onPostExecute(serverURL+function); // json data stored at.
+        new HttpAsyncTask().onPostExecute(serverURL+recommend_func); // json data stored at.
 
         /*
         @@ Onclick event on list view item
          */
-
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
             @Override
             public void onItemClick(AdapterView<?> parent, View v, int position, long id){
@@ -121,6 +123,7 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
                 Intent intent = new Intent(VideoActivity.this, VideoActivity.class);
                 intent.putExtra("URL", mData.getSongURL());
                 intent.putExtra("TITLE", mData.getSongTitle());
+                intent.putExtra("ARTIST", mData.getSongArtist());
 
                 // current -- http://www.youtu.be/<VIDEO_ID>
                 // past -- https://www.youtube.com/watch?v=<VIDEO_ID>
@@ -151,7 +154,7 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
 
             String json = jsonObject.toString();
 
-            HttpPost httpPost = new HttpPost("http://52.68.192.12/soundnerd/music/ytsearch");
+            HttpPost httpPost = new HttpPost(serverURL+ytsearch_func);
 
             ArrayList<NameValuePair> post = new ArrayList<NameValuePair>();
 
@@ -244,7 +247,7 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
         protected void onPostExecute(String result){
             TextView recommender = (TextView)findViewById(R.id.recommender);
             recommender.setText("Suggestions from Bonacell");
-            String jsonRes = getTrackInfo("http://52.68.192.12/soundnerd/music/ytsearch", videoIdReqeust);
+            String jsonRes = getTrackInfo(serverURL+ytsearch_func, videoIdReqeust);
             //String jsonRes = doInBackground(result);
 
             try{
@@ -322,7 +325,7 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
                     catch(Exception e){
                         continue;
                     }
-                    String url = "https://www.youtube.com/watch?v=" +videoID;
+                    String url = youtubeURL+videoID;
 
                     videoResult.setTrackID(videoID);
                     videoResult.setTitle(title);
