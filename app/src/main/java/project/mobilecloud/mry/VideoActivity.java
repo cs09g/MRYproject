@@ -73,8 +73,7 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
 
         Intent intent = getIntent();
 
-        // current -- http://www.youtu.be/<VIDEO_ID>
-        // past -- https://www.youtube.com/watch?v=<VIDEO_ID>
+        /* It's always from youtube so track id is 11 letters */
         String videoId = intent.getStringExtra("TRACK_ID");
         VIDEO_ID = videoId;
         videoIdReqeust = new VideoIdRequest();
@@ -122,8 +121,10 @@ public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.
                 Intent intent = new Intent(VideoActivity.this, VideoActivity.class);
                 intent.putExtra("URL", mData.getSongURL());
                 intent.putExtra("TITLE", mData.getSongTitle());
-                //intent.putExtra("ARTIST", mData.getSongArtist());
-                intent.putExtra("TRACK_ID", mData.getTrackID());
+
+                // current -- http://www.youtu.be/<VIDEO_ID>
+                // past -- https://www.youtube.com/watch?v=<VIDEO_ID>
+                intent.putExtra("TRACK_ID", mData.getSongURL().substring(32));
 
                 startActivityForResult(intent, 1);
             }
